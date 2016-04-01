@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 /*
  * DES Hash Crack
@@ -67,6 +68,27 @@ int dictionary_attack(char * password)
             printf("%s\n", word);
             return 0;
         }
+        int i = 1;
+        do {
+            if (word[0] < 91) 
+            {
+                word[0] = tolower(word[0]);
+            } 
+            else 
+            {
+                for (int j = 0; j < strlen(word); j++)
+                {
+                    word[j] = toupper(word[j]);
+                }
+                i = 0;
+            }
+            if(strcmp(password, crypt(word, salt)) == 0)
+            {
+                printf("%s\n", word);
+                return 0;
+            }
+        } while (i);
+        
     }
 
     if(feof(words))
