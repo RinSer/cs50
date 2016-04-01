@@ -7,7 +7,10 @@
 #include <string.h>
 
 /*
- * MD5 Hash Crack
+ * DES Hash Crack
+ * Takes one argument as DES hashed string and tries to decrypt it 
+ * or takes two arguments: unencrypted string and salt, and encrypts
+ * the given string.
  */
 
 int dictionary_attack(char * password);
@@ -45,7 +48,7 @@ int dictionary_attack(char * password)
     char * salt = malloc(sizeof(char)*2);
     salt[0] = password[0];
     salt[1] = password[1];
-    // Read words from a file
+    // Read words from a file and try them
     FILE * words;
     char word[255];
     words = fopen(WORDS_PATH, "r");
@@ -90,6 +93,7 @@ void bruteforce_attack(char * password, int length)
     char * salt = malloc(sizeof(char)*2);
     salt[0] = password[0];
     salt[1] = password[1];
+    // Try all possible combinations of ASCII printable chars
     char * string = malloc(sizeof(char)*(length+1));
     for (int i = 0; i <= length; i++)
     {
@@ -108,7 +112,7 @@ void bruteforce_attack(char * password, int length)
     printf("Password has not been found\n");
 }
 
-// Recursive increment string
+// Recursively increment string
 int recursive_increment(char * string)
 {
     switch (string[0])
@@ -120,6 +124,7 @@ int recursive_increment(char * string)
             return 1;
         case 126:
             string[0] = 32;
+            // Move pointer to the next char and increment it
             return recursive_increment(string+sizeof(char));
         default:
             string[0]++;
