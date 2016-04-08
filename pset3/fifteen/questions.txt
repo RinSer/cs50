@@ -1,0 +1,9 @@
+questions.txt
+
+Computer Science 50
+Problem Set 3
+
+0. From 3 x 3 to 9 x 9 dimensions are allowed.
+1. Two dimensional array.
+2. greet
+3. init, draw, move and won
