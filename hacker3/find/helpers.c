@@ -74,6 +74,12 @@ void sort(int values[], int n)
     int output[n];
     int total;
     int oldCount;
+	// Initialize counting array
+	for (int i = 0; i < LIMIT; i++)
+	{
+		count[i] = 0;
+	}
+
     // Calculate the histogram of value frequences
     for (int i = 0; i < n; i++)
     {
