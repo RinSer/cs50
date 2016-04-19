@@ -21,10 +21,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 // constants
 #define DIM_MIN 3
 #define DIM_MAX 9
+#define GOD_MODE "GOD"
 
 // board
 int board[DIM_MAX][DIM_MAX];
@@ -39,6 +41,7 @@ void init(void);
 void draw(void);
 bool move(int tile);
 bool won(void);
+void solve(void);
 
 int main(int argc, string argv[])
 {
@@ -102,15 +105,31 @@ int main(int argc, string argv[])
             break;
         }
 
-        // prompt for move
-        printf("Tile to move: ");
-        int tile = GetInt();
+        // Get user input 
+        int tile;
+        do {
+            // prompt for move
+            printf("Tile to move: ");
+            char* input = GetString();
         
-        // quit if user inputs 0 (for testing)
-        if (tile == 0)
-        {
-            break;
-        }
+            // start the GOD mode
+            if (strcmp(input, GOD_MODE) == 0 && d < 5)
+            {
+                tile = 0;
+                solve();
+                break;
+            }
+            else
+            {
+                tile = atoi(input);
+            }
+            
+            if (tile > 0 && tile < d*d)
+            {
+                break;
+            }
+        } while (1);
+
 
         // log move (for testing)
         fprintf(file, "%i\n", tile);
@@ -294,4 +313,217 @@ bool won(void)
     }
     
     return true;
+}
+
+/**
+ * Solves the puzzle in the GOD mode
+ */
+void solve(void)
+{
+    // Create solved board invariant
+    int solved_board[d][d];
+    int c = 1;
+    for (int i = 0; i < d; i++)
+    {
+        for (int j = 0; j < d; j++)
+        {
+            solved_board[i][j] = c;
+            c++;
+        }
+    }
+    solved_board[d-1][d-1] = 0;
+    // Check if the first row is solved
+    for (int k = 0; k < d; k++)
+    {
+        if (board[0][k] != solved_board[0][k])
+        {
+            // Move the first d-2 tiles into place
+            if (k < d-2)
+            {
+                int target_i;
+                int target_j;
+                int empty_i;
+                int empty_j;
+                // Find the necessary tile
+                for (int i = 0; i < d; i++)
+                {
+                    for (int j = 0; j < d; j++)
+                    {
+                        // Find the empty tile
+                        if (board[i][j] == 0)
+                        {
+                            empty_i = i;
+                            empty_j = j;
+                        }
+                        // Find the tile to move
+                        if (board[i][j] == solved_board[0][k])
+                        {
+                            target_i = i;
+                            target_j = j;
+                        }
+                    }
+                }
+                // Move empty tile to the target
+                if (target_j == d-1)
+				{
+					// Move empty tile horizontally
+                    if (empty_j > d-2)
+                    {
+                        move(board[empty_i][--empty_j]);
+                        if (empty_j == target_j)
+                        {
+                            target_j++;
+                        }
+                    }
+                    while (empty_j < d-2)
+                    {
+                        move(board[empty_i][++empty_j]);
+                        if (empty_j == target_j)
+                        {
+                            target_j--;
+                        }
+                    }
+                    // Move empty tile vertically
+                    while (empty_i != target_i)
+                    {
+                        if (empty_i < target_i)
+                        {
+                            move(board[++empty_i][empty_j]);
+                        }
+                        else
+                        {
+                            move(board[--empty_i][empty_j]);
+                        }
+                    }
+                    move(board[empty_i][++empty_j]);
+                }
+                else
+                {
+                    // Move empty tile horizontally
+                    if (empty_j <= target_j)
+                    {
+                        while (empty_j != target_j+1)
+                        {
+                            move(board[empty_i][++empty_j]);
+                            if (empty_j == target_j)
+                            {
+                                target_j--;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        while (empty_j != target_j+1)
+                        {
+                            move(board[empty_i][--empty_j]);
+                            if (empty_j == target_j)
+                            {
+                                target_j++;
+                            }
+                        }
+                    }
+                    // Move empty tile vertically
+                    while (empty_i != target_i)
+                    {
+                        if (empty_i < target_i)
+                        {
+                            move(board[++empty_i][empty_j]);
+                        }
+                        else
+                        {
+                            move(board[--empty_i][empty_j]);
+                        }
+                    }
+                }
+                // Check the new target tile position
+                for (int i = 0; i < d; i++)
+                {
+                    for (int j = 0; j < d; j++)
+                    {
+                        // Find the tile to move
+                        if (board[i][j] == solved_board[0][k])
+                        {
+                            target_i = i;
+                            target_j = j;
+                        }
+                    }
+                }
+                // Move target tile horizontally
+                if (target_j != k)
+                {
+                    if (target_j < k)
+                    {
+                        if (target_i < d-1)
+                        {
+                            for (int i = 0; i < k-target_j; i++)
+                            {
+                                move(board[empty_i][--empty_j]);
+                                move(board[++empty_i][empty_j]);
+                                move(board[empty_i][++empty_j]);
+                                move(board[empty_i][++empty_j]);
+                                move(board[--empty_i][empty_j]);
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < k-target_j; i++)
+                            {
+                                move(board[empty_i][--empty_j]);
+                                move(board[--empty_i][empty_j]);
+                                move(board[empty_i][++empty_j]);
+                                move(board[empty_i][++empty_j]);
+                                move(board[++empty_i][empty_j]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (target_i < d-1)
+                        {
+                            for (int i = 0; i < target_j-k; i++)
+                            {
+                                move(board[++empty_i][empty_j]);
+                                move(board[empty_i][--empty_j]);
+                                move(board[empty_i][--empty_j]);
+                                move(board[--empty_i][empty_j]);
+                                move(board[empty_i][++empty_j]);
+                            }
+                        }
+                        else
+                        {
+                            while (target_j > k)
+                            {
+                                move(board[--empty_i][empty_j]);
+                                move(board[empty_i][--empty_j]);
+                                move(board[empty_i][--empty_j]);
+                                move(board[++empty_i][empty_j]);
+                                move(board[empty_i][++empty_j]);
+                                target_j--;
+                            }
+                        }
+                    }
+                }
+                // Move target tile vertically
+                if (target_i != 0)
+                {
+                    move(board[--empty_i][empty_j]);
+                    move(board[empty_i][--empty_j]);
+                    move(board[++empty_i][empty_j]);
+                    for (int i = 0; i < target_i-1; i++)
+                    {
+                        move(board[empty_i][++empty_j]);
+                        move(board[--empty_i][empty_j]);
+                        move(board[--empty_i][empty_j]);
+                        move(board[empty_i][--empty_j]);
+                        move(board[++empty_i][empty_j]);
+                    }
+                }
+            }
+            // Move the last two tiles into place
+            else
+            {
+                
+            }
+        }
+    }
 }
