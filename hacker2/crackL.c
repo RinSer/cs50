@@ -1,5 +1,5 @@
 #define _XOPEN_SOURCE
-#define WORDS_PATH "./words"
+#define SALT_LENGTH 2
 
 #include <stdio.h>
 #include <unistd.h>
@@ -10,11 +10,11 @@
 /*
  * DES Hash Crack
  * Takes one argument as DES hashed string and tries to decrypt it 
+ * using only brute force approach (all permutations of lowercase letters)
  * or takes two arguments: unencrypted string and salt, and encrypts
  * the given string.
  */
 
-int dictionary_attack(char * password);
 void bruteforce_attack(char * password, int length);
 int recursive_increment(char * string);
 
@@ -35,82 +35,17 @@ int main(int argc, char* argv[])
     }
 }
 
-// Bruteforce attack using common English words
-int dictionary_attack(char * password)
-{
-    // Get Salt
-    char * salt = malloc(sizeof(char)*2);
-    salt[0] = password[0];
-    salt[1] = password[1];
-    // Read words from a file and try them
-    FILE * words;
-    char word[255];
-    words = fopen(WORDS_PATH, "r");
-    
-    if(words == NULL) 
-    {
-        perror("Error in opening file");
-        return -1;
-    }
-    
-    while(fgets(word, 255, words) != NULL)
-    {
-        word[strlen(word)-1] = 0;
-        if(strcmp(password, crypt(word, salt)) == 0)
-        {
-            printf("%s\n", word);
-            return 0;
-        }
-        int i = 1;
-        do {
-            if (word[0] < 91) 
-            {
-                word[0] = tolower(word[0]);
-            } 
-            else 
-            {
-                for (int j = 0; j < strlen(word); j++)
-                {
-                    word[j] = toupper(word[j]);
-                }
-                i = 0;
-            }
-            if(strcmp(password, crypt(word, salt)) == 0)
-            {
-                printf("%s\n", word);
-                return 0;
-            }
-        } while (i);
-        
-    }
-
-    if(feof(words))
-    {
-        return -1;
-    }
-    else if (ferror(words))
-    {
-        printf("Error while reading the file!\n");
-        return -1;
-    }
-    
-    fclose(words);
-    free(salt);
-    free(word);
-
-    return 0;
-}
 
 // Brute force attack using all possible char combinations
 void bruteforce_attack(char * password, int length)
 {
     // Get Salt
-    char * salt = malloc(sizeof(char)*2);
+    char salt[SALT_LENGTH];
     salt[0] = password[0];
     salt[1] = password[1];
     // Try all possible combinations of ASCII printable chars
-    char * string = malloc(sizeof(char)*(length+1));
-    for (int i = length; i > 5; i--)
+    char string[length+1];
+    for (int i = 0; i <= length; i++)
     {
         for (int j = 0; j < i; j++) string[j] = 97;
         string[i] = 0;
@@ -122,8 +57,7 @@ void bruteforce_attack(char * password, int length)
             }
         } while (recursive_increment(string));
     }
-    free(string);
-    free(salt);
+    // The password has not been found
     printf("Password has not been found\n");
 }
 

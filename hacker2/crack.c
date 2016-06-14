@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE
+#define SALT_LENGTH 2
 #define WORDS_PATH "./words"
 
 #include <stdio.h>
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
 int dictionary_attack(char * password)
 {
     // Get Salt
-    char * salt = malloc(sizeof(char)*2);
+    char salt[SALT_LENGTH];
     salt[0] = password[0];
     salt[1] = password[1];
     // Read words from a file and try them
@@ -66,6 +67,7 @@ int dictionary_attack(char * password)
         if(strcmp(password, crypt(word, salt)) == 0)
         {
             printf("%s\n", word);
+            fclose(words);
             return 0;
         }
         int i = 1;
@@ -85,6 +87,7 @@ int dictionary_attack(char * password)
             if(strcmp(password, crypt(word, salt)) == 0)
             {
                 printf("%s\n", word);
+                fclose(words);
                 return 0;
             }
         } while (i);
@@ -102,8 +105,6 @@ int dictionary_attack(char * password)
     }
     
     fclose(words);
-    free(salt);
-    free(word);
 
     return 0;
 }
@@ -112,11 +113,11 @@ int dictionary_attack(char * password)
 void bruteforce_attack(char * password, int length)
 {
     // Get Salt
-    char * salt = malloc(sizeof(char)*2);
+    char salt[SALT_LENGTH];
     salt[0] = password[0];
     salt[1] = password[1];
     // Try all possible combinations of ASCII printable chars
-    char * string = malloc(sizeof(char)*(length+1));
+    char string[length+1];
     for (int i = 0; i <= length; i++)
     {
         for (int j = 0; j < i; j++) string[j] = 32;
@@ -129,8 +130,7 @@ void bruteforce_attack(char * password, int length)
             }
         } while (recursive_increment(string));
     }
-    free(string);
-    free(salt);
+    // The password has not been found
     printf("Password has not been found\n");
 }
 
