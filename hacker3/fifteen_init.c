@@ -25,8 +25,8 @@
 
 // constants
 #define DIM_MIN 3
-#define DIM_MAX 9
-#define GOD_MODE "GOD"
+#define DIM_MAX 4
+#define GOD_MODE "G"
 
 // board
 int board[DIM_MAX][DIM_MAX];
@@ -117,6 +117,7 @@ int main(int argc, string argv[])
             {
                 tile = 0;
                 solve();
+                free(input);
                 break;
             }
             else
@@ -126,6 +127,7 @@ int main(int argc, string argv[])
             
             if (tile > 0 && tile < d*d)
             {
+                free(input);
                 break;
             }
         } while (1);
@@ -136,10 +138,13 @@ int main(int argc, string argv[])
         fflush(file);
 
         // move if possible, else report illegality
-        if (!move(tile))
+        if (tile > 0)
         {
-            printf("\nIllegal move.\n");
-            usleep(500000);
+            if (!move(tile))
+            {
+                printf("\nIllegal move.\n");
+                usleep(500000);
+            }
         }
 
         // sleep thread for animation's sake
