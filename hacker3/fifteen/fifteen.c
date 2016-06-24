@@ -56,10 +56,10 @@ void place_right(int tile);
 void move_diagonally(int tile, int r, int c);
 void move_vertically(int tile, int r);
 void move_horizontally(int tile, int c);
-bool zero_up(void);
-bool zero_down(void);
-bool zero_left(void);
-bool zero_right(void);
+bool zero_up(bool drw);
+bool zero_down(bool drw);
+bool zero_left(bool drw);
+bool zero_right(bool drw);
 bool row_invariant(int r);
 bool col_invariant(int c);
 
@@ -87,6 +87,9 @@ int main(int argc, string argv[])
     {
         return 3;
     }
+
+    // GOD_MODE activated?
+    bool gm = false;
 
     // greet user with instructions
     greet();
@@ -124,7 +127,10 @@ int main(int argc, string argv[])
         // check for win
         if (won())
         {
-            printf("ftw!\n");
+            if (gm)
+                printf("That's easy! (;\n");
+            else
+                printf("ftw!\n");
             break;
         }
 
@@ -138,13 +144,14 @@ int main(int argc, string argv[])
             // start the GOD mode
             if (strcmp(input, GOD_MODE) == 0)
             {
+                tile = 0;
                 if (d > 4)
                 {
                     printf("\nThat is too big for me!\n");
-                    usleep(50000);
+                    usleep(500000);
                     break;
                 }
-                tile = 0;
+                gm = true;
                 solve();
                 free(input);
                 break;
@@ -249,16 +256,16 @@ void random_board(void)
         switch (r)
         {
             case 0:
-                if (zero_up())
+                if (zero_up(false))
                     break;
             case 1:
-                if (zero_down())
+                if (zero_down(false))
                     break;
             case 2:
-                if (zero_left())
+                if (zero_left(false))
                     break;
             case 3:
-                if (zero_right())
+                if (zero_right(false))
                     break;
             default:
                 break;
@@ -271,30 +278,46 @@ void random_board(void)
  */
 void draw(void)
 {
+    printf("\e[34m "); // Blue color for the grid
+    for (int l = 0; l < d; l++)
+    {
+        printf("____ ");
+    }
+    printf("\n");
     for (int i = 0; i < d; i++)
     {
         for (int j = 0; j < d; j++)
         {
             if (board[i][j] == 0)
             {
-                printf(" _  ");
+                printf("|    ");
             }
             else
             {
                 if (board[i][j] < 10)
                 {
-                    printf(" %d  ", board[i][j]);
+                    if (board[i][j] == d*i+j+1)
+                        printf("|  \e[36m%d\e[34m ", board[i][j]);
+                    else
+                        printf("|  \e[31m%d\e[34m ", board[i][j]);
                 }
                 else
                 {
-                    printf("%d  ", board[i][j]);
+                    if (board[i][j] == d*i+j+1)
+                        printf("| \e[36m%d\e[34m ", board[i][j]);
+                    else
+                        printf("| \e[31m%d\e[34m ", board[i][j]);
                 }
             }
-            
         }
-        printf("\n");
-        printf("\n");
+        printf("|\n");
+        for (int l = 0; l < d; l++)
+        {
+            printf("|____");
+        }
+        printf("|\n");
     }
+    printf("\e[m\n");
 }
 
 /**
@@ -419,17 +442,17 @@ bool solve_row(int n)
     // Move zero down one row
     if (board[n][d-1] == 0 && board[n+1][d-1] != t1)
     {
-        zero_down();
+        zero_down(true);
     }
     else
     {
-        zero_left();
-        zero_down();
-        zero_right();
+        zero_left(true);
+        zero_down(true);
+        zero_right(true);
         move_horizontally(t1, d-3);
-        zero_up();
-        zero_right();
-        zero_down();
+        zero_up(true);
+        zero_right(true);
+        zero_down(true);
     }
     // Place the last tile one column before last
     // Check if the last two tiles are solved
@@ -447,9 +470,9 @@ bool solve_row(int n)
             move_horizontally(t1, d-2);
         }
         // Place the last two tiles into proper places
-        zero_up();
-        zero_left();
-        zero_down();
+        zero_up(true);
+        zero_left(true);
+        zero_down(true);
     }
 
     return row_invariant(n);
@@ -492,12 +515,12 @@ void almost_solve_row(int n)
             int invariant = d*n+1+ci;
             if (board[n][ci] != invariant)
             {
-                zero_left();
-                zero_left();
-                zero_down();
-                zero_right();
-                zero_up();
-                zero_right();
+                zero_left(true);
+                zero_left(true);
+                zero_down(true);
+                zero_right(true);
+                zero_up(true);
+                zero_right(true);
             }
         }
     }
@@ -531,21 +554,21 @@ bool solve_col(int n)
     if (board[d-1][n] == t1)
     {
         place_right(t2);
-        zero_down();
-        zero_left();
-        zero_up();
-        zero_right();
-        zero_right();
-        zero_down();
-        zero_left();
-        zero_up();
-        zero_left();
-        zero_down();
-        zero_right();
-        zero_right();
-        zero_up();
-        zero_left();
-        zero_down();
+        zero_down(true);
+        zero_left(true);
+        zero_up(true);
+        zero_right(true);
+        zero_right(true);
+        zero_down(true);
+        zero_left(true);
+        zero_up(true);
+        zero_left(true);
+        zero_down(true);
+        zero_right(true);
+        zero_right(true);
+        zero_up(true);
+        zero_left(true);
+        zero_down(true);
     }
     // Check if the last two tiles are solved
     while (board[d-2][n] != t1 || board[d-1][n] != t2)
@@ -565,12 +588,12 @@ bool solve_col(int n)
         // Check zero tile position
         if (board[d-2][n+2] == 0)
         {
-            zero_down();
-            zero_left();
+            zero_down(true);
+            zero_left(true);
         }
-        zero_left();
-        zero_up();
-        zero_right();
+        zero_left(true);
+        zero_up(true);
+        zero_right(true);
     }
 
     return col_invariant(n);
@@ -616,15 +639,15 @@ void almost_solve_col(int n)
 void brute_force_last(void)
 {
     // Place zero to the lower corner
-    zero_down();
-    zero_right();
+    zero_down(true);
+    zero_right(true);
     // Iterate zero rotation until the proper placement
     while (!won())
     {
-        zero_up();
-        zero_left();
-        zero_down();
-        zero_right();
+        zero_up(true);
+        zero_left(true);
+        zero_down(true);
+        zero_right(true);
     }
 }
 
@@ -649,7 +672,7 @@ void place_right(int tile)
             // Place zero tile one col before last
             if (j0 == d-1)
             {
-                zero_left();
+                zero_left(true);
                 j0--;
             }
             else
@@ -657,7 +680,7 @@ void place_right(int tile)
                 //for (int c = 0; c < abs(j0 - (d-2)); c++)
                 while (j0 != (d-2))
                 {
-                    zero_right();
+                    zero_right(true);
                     j0++;
                 }
             }
@@ -667,17 +690,17 @@ void place_right(int tile)
             {
                 if (i0 < ti)
                 {
-                    zero_down();
+                    zero_down(true);
                     i0++;
                 }
                 else
                 {
-                    zero_up();
+                    zero_up(true);
                     i0--;
                 }
             }
             // Swap the tiles
-            zero_right();
+            zero_right(true);
             j0++;
             tj--;
         }
@@ -693,7 +716,7 @@ void place_right(int tile)
                     //for (int c = 0; c < abs(j0 - (tj+1)); c++)
                     while (j0 != (tj+1))
                     {
-                        zero_left();
+                        zero_left(true);
                         j0--;
                     }
                 }
@@ -703,7 +726,7 @@ void place_right(int tile)
                     //for (int c = 0; c < abs(j0 - tj); c++)
                     while (j0 != tj)
                     {
-                        zero_right();
+                        zero_right(true);
                         j0++;
                     }
                     tj--;
@@ -719,12 +742,12 @@ void place_right(int tile)
             {
                 if (j0 < (tj+1))
                 {
-                    zero_right();
+                    zero_right(true);
                     j0++;
                 }
                 else
                 {
-                    zero_left();
+                    zero_left(true);
                     j0--;
                 } 
             }
@@ -734,12 +757,12 @@ void place_right(int tile)
             {
                 if (i0 < ti)
                 {
-                    zero_down();
+                    zero_down(true);
                     i0++;
                 }
                 else
                 {
-                    zero_up();
+                    zero_up(true);
                     i0--;
                 }
             }
@@ -763,14 +786,14 @@ void move_diagonally(int tile, int r, int c)
     // the necessary row or column
     while (ti > r && tj > c)
     {
-        zero_up();
-        zero_left();
-        zero_down();
+        zero_up(true);
+        zero_left(true);
+        zero_down(true);
         // Adjust target tile row
         ti--;
-        zero_left();
-        zero_up();
-        zero_right();
+        zero_left(true);
+        zero_up(true);
+        zero_right(true);
         // Adjust target tile col
         tj--;
     }
@@ -795,24 +818,24 @@ void move_vertically(int tile, int r)
         // Move up
         if (ti > r)
         {
-            zero_up();
-            zero_left();
-            zero_down();
+            zero_up(true);
+            zero_left(true);
+            zero_down(true);
             // Adjust target tile row
             ti--;
-            zero_right();
-            zero_up();
+            zero_right(true);
+            zero_up(true);
         }
         // Move down
         else if (ti < r)
         {
-            zero_down();
-            zero_left();
-            zero_up();
+            zero_down(true);
+            zero_left(true);
+            zero_up(true);
             // Adjust target tile row
             ti++;
-            zero_right();
-            zero_down();
+            zero_right(true);
+            zero_down(true);
         }
     }
 }
@@ -838,11 +861,11 @@ void move_horizontally(int tile, int c)
             // Move left
             if (tj > c)
             {
-                zero_up();
-                zero_left();
-                zero_left();
-                zero_down();
-                zero_right();
+                zero_up(true);
+                zero_left(true);
+                zero_left(true);
+                zero_down(true);
+                zero_right(true);
                 // Adjust target tile col
                 tj--;
                 if (tj == c)
@@ -851,16 +874,16 @@ void move_horizontally(int tile, int c)
             // Move right
             else if (tj < c)
             {
-                zero_left();
+                zero_left(true);
                 // Adjust target tile col
                 tj++;
                 // Stop if target tile has reached the last col
                 if (tj == d-1)
                     break;
-                zero_up();
-                zero_right();
-                zero_right();
-                zero_down();
+                zero_up(true);
+                zero_right(true);
+                zero_right(true);
+                zero_down(true);
             }
         }
     }
@@ -871,27 +894,27 @@ void move_horizontally(int tile, int c)
             // Move left
             if (tj > c)
             {
-                zero_down();
-                zero_left();
-                zero_left();
-                zero_up();
-                zero_right();
+                zero_down(true);
+                zero_left(true);
+                zero_left(true);
+                zero_up(true);
+                zero_right(true);
                 // Adjust target tile col
                 tj--;
             }
             // Move right
             else if (tj < c)
             {
-                zero_left();
+                zero_left(true);
                 // Adjust target tile col
                 tj++;
                 // Stop if target tile has reached the last col
                 if (tj == d-1)
                     break;
-                zero_down();
-                zero_right();
-                zero_right();
-                zero_up();
+                zero_down(true);
+                zero_right(true);
+                zero_right(true);
+                zero_up(true);
             }
         }
     }
@@ -918,44 +941,88 @@ void find_tile(int tile, int* r, int* c)
 /**
  * Helper functions to move the zero tile in particular direction
  */
-bool zero_up(void)
+bool zero_up(bool drw)
 {
     int i, j;
     find_tile(0, &i, &j);
     if (i > 0)
+    {
+        // Animate the move if necessary
+        if (drw)
+        {
+            clear();
+            draw();
+            usleep(100000);
+        }
         return move(board[--i][j]);
+    }
     else
+    {
         return false;
+    }
 }
 
-bool zero_down(void)
+bool zero_down(bool drw)
 {
     int i, j;
     find_tile(0, &i, &j);
     if (i < d-1)
+    {
+        // Animate the move if necessary
+        if (drw)
+        {
+            clear();
+            draw();
+            usleep(100000);
+        }
         return move(board[++i][j]);
+    }
     else
+    {
         return false;
+    }
 }
 
-bool zero_left(void)
+bool zero_left(bool drw)
 {
     int i, j;
     find_tile(0, &i, &j);
     if (j > 0)
+    {
+        // Animate the move if necessary
+        if (drw)
+        {
+            clear();
+            draw();
+            usleep(100000);
+        }
         return move(board[i][--j]);
+    } 
     else
+    {
         return false;
+    }
 }
 
-bool zero_right(void)
+bool zero_right(bool drw)
 {
     int i, j;
     find_tile(0, &i, &j);
     if (j < d-1)
+    {
+        // Animate the move if necessary
+        if (drw)
+        {
+            clear();
+            draw();
+            usleep(100000);
+        }
         return move(board[i][++j]);
+    }
     else
+    {
         return false;
+    } 
 }
 
 /**
